@@ -1,0 +1,599 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String?
+  name          String
+  avatar        String?
+  role          GlobalRole @default(PARTICIPANT)
+  bio           String?
+  skills        String[]
+  linkedinUrl   String?
+  githubUrl     String?
+  location      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  eventRoles    EventRole[]
+  teams         TeamMember[]
+  certificates  Certificate[]
+  accounts      Account[]
+  sessions      Session[]
+  notifications Notification[]
+  mentorProfiles Mentor[]
+  chatMessages  ChatMessage[]
+  votes         CrowdVote[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum GlobalRole {
+  SUPER_ADMIN
+  PARTICIPANT
+}
+
+model Event {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  tagline         String?
+  description     String
+  bannerUrl       String?
+  logoUrl         String?
+  themeColor      String   @default("#534AB7")
+  customDomain    String?
+  status          EventStatus @default(DRAFT)
+  mode            EventMode   @default(ONLINE)
+  location        String?
+  maxTeamSize     Int      @default(4)
+  minTeamSize     Int      @default(1)
+  maxTeams        Int?
+  registrationType RegistrationType @default(OPEN)
+  hasWaitlist     Boolean   @default(false)
+  registrationOpen  DateTime
+  registrationClose DateTime
+  startDate       DateTime
+  endDate         DateTime
+  timezone        String
+  isPublic        Boolean  @default(true)
+  leaderboardPublic Boolean @default(false)
+  allowLateSubmissions Boolean @default(false)
+  latePenaltyPercent   Int  @default(0)
+  discordWebhookUrl String?
+  slackWebhookUrl String?
+  apiKey         String? @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  rounds          Round[]
+  teams           Team[]
+  eventRoles      EventRole[]
+  announcements   Announcement[]
+  sponsors        Sponsor[]
+  mentors         Mentor[]
+  tracks          Track[]
+  prizes          Prize[]
+  resources       Resource[]
+  registrations   Registration[]
+  applications    ApplicationQuestion[]
+  scoreAppeals    ScoreAppeal[]
+  certTemplates   CertificateTemplate[]
+  chatChannels    ChatChannel[]
+  emailTemplates  EmailTemplate[]
+  webhookDeliveries WebhookDelivery[]
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ACTIVE
+  JUDGING
+  COMPLETED
+  ARCHIVED
+}
+
+enum EventMode {
+  ONLINE
+  IN_PERSON
+  HYBRID
+}
+
+enum RegistrationType {
+  OPEN
+  APPLICATION
+  INVITE_ONLY
+}
+
+model EventRole {
+  id       String    @id @default(cuid())
+  userId   String
+  eventId  String
+  role     EventRoleType
+  user     User  @relation(fields:[userId], references:[id])
+  event    Event @relation(fields:[eventId], references:[id])
+  @@unique([userId, eventId, role])
+}
+
+enum EventRoleType {
+  ORGANIZER
+  CO_ORGANIZER
+  JUDGE
+  MENTOR
+  SPONSOR_REP
+  VIEWER
+}
+
+model Track {
+  id      String @id @default(cuid())
+  eventId String
+  name    String
+  description String?
+  event   Event  @relation(fields:[eventId], references:[id])
+  teams   Team[]
+  prizes  Prize[]
+}
+
+model Team {
+  id          String  @id @default(cuid())
+  eventId     String
+  trackId     String?
+  name        String
+  description String?
+  avatarUrl   String?
+  techStack   String[]
+  lookingForMembers Boolean @default(false)
+  requiredSkills String[]
+  isLocked    Boolean @default(false)
+  inviteCode  String  @unique @default(cuid())
+  event       Event   @relation(fields:[eventId], references:[id])
+  track       Track?  @relation(fields:[trackId], references:[id])
+  members     TeamMember[]
+  submissions Submission[]
+  scores      Score[]
+  roundResults RoundResult[]
+  mentorSlots MentorSlot[]
+  galleryLikes GalleryLike[]
+  crowdVotes  CrowdVote[]
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  userId String
+  role   TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+  team   Team @relation(fields:[teamId], references:[id])
+  user   User @relation(fields:[userId], references:[id])
+  @@unique([teamId, userId])
+}
+
+enum TeamRole {
+  LEAD
+  MEMBER
+}
+
+model Round {
+  id              String  @id @default(cuid())
+  eventId         String
+  name            String
+  description     String?
+  order           Int
+  status          RoundStatus @default(UPCOMING)
+  submissionOpen  DateTime
+  submissionClose DateTime
+  judgingOpen     DateTime?
+  judgingClose    DateTime?
+  advancingTeams  Int?
+  advancingPercent Float?
+  allowGithub     Boolean @default(true)
+  allowDemoUrl    Boolean @default(true)
+  allowFigma      Boolean @default(true)
+  allowVideo      Boolean @default(true)
+  allowDeck       Boolean @default(true)
+  allowFileUpload Boolean @default(true)
+  isCalibrationRequired Boolean @default(true)
+  event           Event   @relation(fields:[eventId], references:[id])
+  rubrics         Rubric[]
+  submissions     Submission[]
+  scores          Score[]
+  roundResults    RoundResult[]
+  judgeAssignments JudgeAssignment[]
+  customPrompts   RoundPrompt[]
+}
+
+enum RoundStatus {
+  UPCOMING
+  SUBMISSIONS_OPEN
+  SUBMISSIONS_CLOSED
+  JUDGING_OPEN
+  JUDGING_CLOSED
+  RESULTS_RELEASED
+}
+
+model RoundPrompt {
+  id       String @id @default(cuid())
+  roundId  String
+  prompt   String
+  required Boolean @default(false)
+  round    Round @relation(fields:[roundId], references:[id])
+}
+
+model Rubric {
+  id          String  @id @default(cuid())
+  roundId     String
+  name        String
+  description String?
+  maxScore    Int     @default(10)
+  weight      Float   @default(1.0)
+  round       Round   @relation(fields:[roundId], references:[id])
+  scores      Score[]
+}
+
+model Submission {
+  id          String   @id @default(cuid())
+  teamId      String
+  roundId     String
+  eventId     String
+  submittedBy String
+  status      SubmissionStatus @default(DRAFT)
+  githubUrl   String?
+  demoUrl     String?
+  figmaUrl    String?
+  videoUrl    String?
+  deckUrl     String?
+  description String?
+  customFields Json?
+  isLate      Boolean  @default(false)
+  submittedAt DateTime?
+  createdAt   DateTime @default(now())
+  team        Team   @relation(fields:[teamId], references:[id])
+  round       Round  @relation(fields:[roundId], references:[id])
+  files       SubmissionFile[]
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  LATE_SUBMITTED
+  FLAGGED
+}
+
+model SubmissionFile {
+  id           String @id @default(cuid())
+  submissionId String
+  filename     String
+  url          String
+  size         Int
+  mimeType     String
+  submission   Submission @relation(fields:[submissionId], references:[id])
+}
+
+model JudgeAssignment {
+  id       String @id @default(cuid())
+  roundId  String
+  judgeId  String
+  teamId   String
+  round    Round  @relation(fields:[roundId], references:[id])
+  @@unique([roundId, judgeId, teamId])
+}
+
+model Score {
+  id         String  @id @default(cuid())
+  teamId     String
+  judgeId    String
+  roundId    String
+  rubricId   String
+  eventId    String
+  rawScore   Float
+  normalizedScore Float?
+  zScore     Float?
+  comment    String?
+  isCalibration Boolean @default(false)
+  submittedAt DateTime @default(now())
+  team    Team   @relation(fields:[teamId], references:[id])
+  rubric  Rubric @relation(fields:[rubricId], references:[id])
+  round   Round  @relation(fields:[roundId], references:[id])
+  @@unique([teamId, judgeId, roundId, rubricId])
+}
+
+model RoundResult {
+  id               String  @id @default(cuid())
+  teamId           String
+  roundId          String
+  rawTotal         Float
+  compensatedTotal Float
+  weightedTotal    Float
+  rank             Int
+  percentile       Float
+  advanced         Boolean @default(false)
+  lowCoverageFlag  Boolean @default(false)
+  team             Team  @relation(fields:[teamId], references:[id])
+  round            Round @relation(fields:[roundId], references:[id])
+  @@unique([teamId, roundId])
+}
+
+model ScoreAppeal {
+  id         String @id @default(cuid())
+  teamId     String
+  roundId    String
+  rubricId   String?
+  eventId    String
+  reason     String
+  status     AppealStatus @default(PENDING)
+  resolution String?
+  resolvedAt DateTime?
+  createdAt  DateTime @default(now())
+  event      Event @relation(fields:[eventId], references:[id])
+}
+
+enum AppealStatus {
+  PENDING
+  UNDER_REVIEW
+  UPHELD
+  REJECTED
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  eventId   String
+  title     String
+  body      String
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields:[eventId], references:[id])
+}
+
+model Mentor {
+  id      String @id @default(cuid())
+  eventId String
+  userId  String
+  expertise String[]
+  slots   MentorSlot[]
+  event   Event @relation(fields:[eventId], references:[id])
+  user    User @relation(fields:[userId], references:[id])
+}
+
+model MentorSlot {
+  id        String  @id @default(cuid())
+  mentorId  String
+  startsAt  DateTime
+  endsAt    DateTime
+  isBooked  Boolean @default(false)
+  teamId    String?
+  meetLink  String?
+  mentor    Mentor @relation(fields:[mentorId], references:[id])
+  team      Team? @relation(fields:[teamId], references:[id])
+}
+
+model Sponsor {
+  id          String @id @default(cuid())
+  eventId     String
+  name        String
+  logoUrl     String?
+  websiteUrl  String?
+  tier        SponsorTier @default(SILVER)
+  prizeText   String?
+  event       Event @relation(fields:[eventId], references:[id])
+  prizes      Prize[]
+}
+
+enum SponsorTier {
+  TITLE
+  GOLD
+  SILVER
+  BRONZE
+  COMMUNITY
+}
+
+model Prize {
+  id          String @id @default(cuid())
+  eventId     String
+  name        String
+  description String?
+  value       String?
+  currency    String @default("USD")
+  trackId     String?
+  sponsorId   String?
+  event       Event  @relation(fields:[eventId], references:[id])
+  track       Track? @relation(fields:[trackId], references:[id])
+  sponsor     Sponsor? @relation(fields:[sponsorId], references:[id])
+}
+
+model Resource {
+  id      String @id @default(cuid())
+  eventId String
+  title   String
+  url     String
+  type    ResourceType
+  event   Event @relation(fields:[eventId], references:[id])
+}
+
+enum ResourceType {
+  LINK
+  DOCUMENT
+  VIDEO
+  DATASET
+  API_KEY
+  OTHER
+}
+
+model Certificate {
+  id         String  @id @default(cuid())
+  userId     String
+  eventId    String
+  type       CertType
+  verifyCode String  @unique @default(cuid())
+  issuedAt   DateTime @default(now())
+  pdfUrl     String?
+  user       User @relation(fields:[userId], references:[id])
+}
+
+enum CertType {
+  PARTICIPANT
+  WINNER
+  RUNNER_UP
+  JUDGE
+  MENTOR
+  ORGANIZER
+  BEST_IN_TRACK
+  CROWD_CHOICE
+}
+
+model Registration {
+  id         String @id @default(cuid())
+  eventId    String
+  userId     String
+  status     RegistrationStatus @default(CONFIRMED)
+  dietaryRestrictions String?
+  tshirtSize String?
+  customAnswers Json?
+  waitlistPosition Int?
+  createdAt DateTime @default(now())
+  event     Event @relation(fields:[eventId], references:[id])
+  @@unique([eventId, userId])
+}
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  WAITLISTED
+}
+
+model ApplicationQuestion {
+  id       String @id @default(cuid())
+  eventId  String
+  label    String
+  kind     QuestionType
+  options  String[]
+  required Boolean @default(false)
+  order    Int
+  event    Event @relation(fields:[eventId], references:[id])
+}
+
+enum QuestionType {
+  SHORT_TEXT
+  PARAGRAPH
+  DROPDOWN
+  CHECKBOX
+  FILE_UPLOAD
+}
+
+model Notification {
+  id       String @id @default(cuid())
+  userId   String
+  eventId  String?
+  type     String
+  title    String
+  body     String
+  isRead   Boolean @default(false)
+  createdAt DateTime @default(now())
+  user     User @relation(fields:[userId], references:[id])
+}
+
+model CertificateTemplate {
+  id       String @id @default(cuid())
+  eventId  String
+  html     String
+  event    Event @relation(fields:[eventId], references:[id])
+}
+
+model EmailTemplate {
+  id        String @id @default(cuid())
+  eventId   String
+  key       String
+  subject   String
+  html      String
+  updatedAt DateTime @updatedAt
+  event     Event @relation(fields:[eventId], references:[id])
+  @@unique([eventId, key])
+}
+
+model ChatChannel {
+  id      String @id @default(cuid())
+  eventId String
+  name    String
+  isOfficial Boolean @default(false)
+  event   Event @relation(fields:[eventId], references:[id])
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id        String @id @default(cuid())
+  channelId String
+  userId    String
+  body      String
+  isOfficial Boolean @default(false)
+  createdAt DateTime @default(now())
+  channel   ChatChannel @relation(fields:[channelId], references:[id])
+  user      User @relation(fields:[userId], references:[id])
+}
+
+model GalleryLike {
+  id        String @id @default(cuid())
+  teamId    String
+  userId    String
+  createdAt DateTime @default(now())
+  team      Team @relation(fields:[teamId], references:[id])
+  @@unique([teamId, userId])
+}
+
+model CrowdVote {
+  id        String @id @default(cuid())
+  eventId   String
+  teamId    String
+  userId    String
+  createdAt DateTime @default(now())
+  user      User @relation(fields:[userId], references:[id])
+  team      Team @relation(fields:[teamId], references:[id])
+  @@unique([eventId, teamId, userId])
+}
+
+model WebhookDelivery {
+  id        String @id @default(cuid())
+  eventId   String
+  type      String
+  payload   Json
+  delivered Boolean @default(false)
+  createdAt DateTime @default(now())
+  event     Event @relation(fields:[eventId], references:[id])
+}
