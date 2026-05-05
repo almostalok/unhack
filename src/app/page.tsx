@@ -99,15 +99,15 @@ export default function Home() {
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#534AB7] via-[#5f53cf] to-[#1D9E75] p-8 text-white shadow-xl"
       >
         {/* decorative circles */}
-        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5" />
-        <div className="pointer-events-none absolute -bottom-20 right-32 h-80 w-80 rounded-full bg-white/5" />
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5" aria-hidden="true" />
+        <div className="pointer-events-none absolute -bottom-20 right-32 h-80 w-80 rounded-full bg-white/5" aria-hidden="true" />
 
         <div className="flex items-center gap-3 text-xl font-bold">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-white">U✓</div>
           UnHack
         </div>
         <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">
-          Fair by design.<br />Transparent by default.
+          Fair by design. Transparent by default.
         </h1>
         <p className="mt-3 max-w-2xl text-white/85 sm:text-lg">
           A full-stack hackathon operating system — from registration and team formation through bias-compensated judging, realtime collaboration, and verifiable certificates.

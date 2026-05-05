@@ -198,7 +198,7 @@ export default async function RoutePage({ params }: { params: Promise<{ route: s
 
       {/* Screen header */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#534AB7] to-[#1D9E75] p-6 text-white shadow-lg">
-        <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/5" />
+        <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/5" aria-hidden="true" />
         <h1 className="text-3xl font-semibold">{screen.title}</h1>
         <p className="mt-2 text-sm text-white/85">{screen.subtitle}</p>
       </section>
@@ -220,7 +220,7 @@ export default async function RoutePage({ params }: { params: Promise<{ route: s
               Responsive container with loading skeleton and empty-state support.
             </p>
             {/* Mock content rows */}
-            <div className="mt-1 flex flex-col gap-2">
+            <div className="mt-1 flex flex-col gap-2" aria-hidden="true">
               <div className="h-2.5 w-3/4 rounded-full bg-slate-100 dark:bg-slate-800" />
               <div className="h-2.5 w-1/2 rounded-full bg-slate-100 dark:bg-slate-800" />
               <div className="mt-1 h-10 rounded-md bg-slate-100 dark:bg-slate-800" />
