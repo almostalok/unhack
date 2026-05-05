@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LayoutGrid, ArrowLeft } from "lucide-react";
 
 type Screen = {
   title: string;
@@ -175,11 +176,14 @@ export default async function RoutePage({ params }: { params: Promise<{ route: s
 
   if (!screen) {
     return (
-      <div className="mx-auto flex min-h-[70vh] max-w-4xl flex-col items-center justify-center p-8">
-        <h1 className="text-3xl font-semibold">UnHack</h1>
-        <p className="mt-2 text-slate-600">This route is not configured yet.</p>
-        <Link href="/dashboard" className="mt-5 rounded-md bg-[#534AB7] px-4 py-2 text-white">
-          Open dashboard
+      <div className="mx-auto flex min-h-[70vh] max-w-4xl flex-col items-center justify-center gap-4 p-8 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#534AB7]/10">
+          <LayoutGrid size={32} className="text-[#534AB7]" />
+        </div>
+        <h1 className="text-3xl font-semibold">Page not configured</h1>
+        <p className="text-slate-500 dark:text-slate-400">This route doesn&apos;t have a scaffold screen yet.</p>
+        <Link href="/dashboard" className="mt-2 flex items-center gap-2 rounded-md bg-[#534AB7] px-4 py-2 text-sm font-medium text-white hover:bg-[#4238a8]">
+          <ArrowLeft size={15} /> Open dashboard
         </Link>
       </div>
     );
@@ -187,31 +191,53 @@ export default async function RoutePage({ params }: { params: Promise<{ route: s
 
   return (
     <main className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">
-      <section className="rounded-2xl bg-gradient-to-r from-[#534AB7] to-[#1D9E75] p-6 text-white">
+      {/* Back link */}
+      <Link href="/" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
+        <ArrowLeft size={14} /> Home
+      </Link>
+
+      {/* Screen header */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#534AB7] to-[#1D9E75] p-6 text-white shadow-lg">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/5" aria-hidden="true" />
         <h1 className="text-3xl font-semibold">{screen.title}</h1>
-        <p className="mt-2 text-sm text-white/90">{screen.subtitle}</p>
+        <p className="mt-2 text-sm text-white/85">{screen.subtitle}</p>
       </section>
 
+      {/* Panel grid */}
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {screen.panels.map((panel) => (
-          <article key={panel} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <h2 className="font-medium text-slate-900 dark:text-slate-100">{panel}</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Fully responsive container with loading and empty-state support.
+        {screen.panels.map((panel, i) => (
+          <article
+            key={panel}
+            className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#534AB7]/10 text-xs font-bold text-[#534AB7]">
+                {i + 1}
+              </div>
+              <h2 className="font-medium text-slate-900 dark:text-slate-100">{panel}</h2>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Responsive container with loading skeleton and empty-state support.
             </p>
-            <div className="mt-4 h-20 rounded-md bg-slate-100 dark:bg-slate-800" aria-hidden />
+            {/* Mock content rows */}
+            <div className="mt-1 flex flex-col gap-2" aria-hidden="true">
+              <div className="h-2.5 w-3/4 rounded-full bg-slate-100 dark:bg-slate-800" />
+              <div className="h-2.5 w-1/2 rounded-full bg-slate-100 dark:bg-slate-800" />
+              <div className="mt-1 h-10 rounded-md bg-slate-100 dark:bg-slate-800" />
+            </div>
           </article>
         ))}
       </section>
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Primary actions</h3>
+      {/* Actions */}
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Primary actions</h3>
         <div className="mt-3 flex flex-wrap gap-3">
           {screen.actions.map((action) => (
             <button
               key={action}
               type="button"
-              className="rounded-md bg-[#534AB7] px-4 py-2 text-sm font-medium text-white hover:bg-[#4238a8]"
+              className="rounded-md bg-[#534AB7] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4238a8] active:scale-95"
             >
               {action}
             </button>
